@@ -5,13 +5,27 @@
 #define mod (int)(1e9+7)
 using namespace std;
 
-void dfs(int node, vector<bool> &visited, vector<vector<int>> &adj, vector<bool> &fixed){
+void revDfs(int node, vector<bool> &visited, vector<vector<int>> &adj, vector<int> &comp){
+    visited[node] = true;
+    comp.push_back(node);
+
+    for(auto it: adj[node]){
+        if(!visited[it])
+            revDfs(it, visited, adj, comp);
+    }
+}
+
+
+void dfs(int node, vector<bool> &visited, vector<vector<int>> &adj, stack<int> &stk){
     visited[node] = true;
 
     for(auto it: adj[node]){
-        if(!visited[it] && !fixed[it])
-            dfs(it, visited, adj, fixed);
-    }
+        if(!visited[it])
+            dfs(it, visited, adj, stk);
+    
+        }
+
+    stk.push(node);
 }
 
 void solve(){
@@ -29,24 +43,31 @@ void solve(){
     vector<bool> visited(n, false);
     int cnt=1;
     vector<int> kingdom(n, 0);
+    stack<int> stk;
 
     for(int i=0; i<n; i++){
-        if(visited[i])
+        if(!visited[i])
+            dfs(i, visited, adj, stk);
+    }
+
+    
+        vector<bool> vis(n, false);
+
+    while(stk.size()){
+        int node = stk.top(); stk.pop();
+
+        if(vis[node])
             continue;
 
-        vector<bool> vis1(n, false), vis2(n, false);
+        vector<int> comp;
 
-        dfs(i, vis1, adj, visited);
-        dfs(i, vis2, invAdj, visited);
+        revDfs(node, vis, invAdj, comp);
+        for(auto it: comp)
+            kingdom[it] = cnt;
 
-        for(int j=0; j<n; j++){
-            if(vis1[j] && vis2[j]){
-                visited[j] = true;
-                kingdom[j] = cnt;
-            }
-        }
         cnt++;
     }
+
 
     cout << cnt-1 << endl;
     for(auto it: kingdom)
